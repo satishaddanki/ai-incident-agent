@@ -1,0 +1,44 @@
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Pytest
+.pytest_cache/
+
+# Git
+.git/
+.gitignore
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Local databases and persistent storage
+storage/
+*.db
+
+# Logs
+logs/
+*.log
+data/logs/
+
+# Documentation and archives
+docs/
+incident_agent_assessment_documentation/
+*.zip
+
+# Development files
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db

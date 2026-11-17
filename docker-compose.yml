@@ -1,0 +1,23 @@
+﻿services:
+  incident-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: ai-incident-agent:compose
+    container_name: ai-incident-agent-compose
+
+    ports:
+      - "8002:8000"
+
+    env_file:
+      - .env
+
+    environment:
+      QDRANT_URL: http://host.docker.internal:6333
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    restart: unless-stopped

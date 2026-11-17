@@ -1,0 +1,43 @@
+
+[
+  {
+    "incident_id": "INC-1001",
+    "severity": "P1",
+    "service": "PaymentService",
+    "title": "Database connection pool exhaustion",
+    "description": "Payment API requests started failing with database connection timeout errors during peak traffic. The connection pool reached its maximum configured limit. Several application requests held connections longer than expected.",
+    "root_cause": "Database connections were not released promptly because of improperly managed connection lifetimes and long-running database transactions.",
+    "remediation": "Ensure connections are disposed correctly, optimize long-running queries, configure connection pool limits appropriately, and introduce database connection monitoring.",
+    "tags": ["database", "connection-pool", "timeout"]
+  },
+  {
+    "incident_id": "INC-1002",
+    "severity": "P2",
+    "service": "CustomerService",
+    "title": "Application memory leak",
+    "description": "Customer API memory consumption increased continuously over several hours. Eventually the application container exceeded its memory limit and restarted. Garbage collection did not recover the expected memory.",
+    "root_cause": "Application objects were retained by an unbounded in-memory cache and event subscriptions were not released.",
+    "remediation": "Implement bounded caching, unsubscribe unused event handlers, profile memory allocations, and configure container memory alerts.",
+    "tags": ["memory", "application", "container"]
+  },
+  {
+    "incident_id": "INC-1003",
+    "severity": "P1",
+    "service": "OrderService",
+    "title": "High CPU utilization",
+    "description": "Order processing latency increased significantly. CPU utilization remained above 95 percent across application instances. Request queues started growing and users experienced slow responses.",
+    "root_cause": "An inefficient data-processing loop caused excessive CPU consumption, amplified by concurrent request processing.",
+    "remediation": "Optimize CPU-intensive code, introduce bounded concurrency, use asynchronous processing where appropriate, and implement CPU utilization alerts.",
+    "tags": ["cpu", "performance", "order-processing"]
+  },
+  {
+    "incident_id": "INC-1004",
+    "severity": "P2",
+    "service": "PaymentService",
+    "title": "Database query latency",
+    "description": "Payment processing slowed down after a database deployment. SQL queries began taking several seconds, increasing API response times and creating a backlog of pending payment requests.",
+    "root_cause": "A frequently executed query performed a full table scan because the required database index was missing.",
+    "remediation": "Review query execution plans, add appropriate indexes, optimize SQL queries, and monitor database query latency.",
+    "tags": ["database", "sql", "latency"]
+  }
+]
