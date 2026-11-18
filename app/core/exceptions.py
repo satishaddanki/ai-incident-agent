@@ -1,4 +1,4 @@
-
+# app/core/exceptions.py
 class IncidentAgentError(Exception):
     """Base exception for the entire incident management application."""
 

@@ -1,12 +1,13 @@
 # app/main.py
 from typing import Any
-
+import logging
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from langgraph.types import Command
 
 from app.core.exceptions import (
+    EnterpriseAPIError,
     AuthorizationError,
     ApprovalRequiredError,
     InvalidActionError,
@@ -19,6 +20,7 @@ from app.workflows.incident_workflow import (
     enterprise_api,
 )
 
+logger = logging.getLogger(__name__)
 
 # =========================================================
 # 1. FastAPI application
@@ -53,6 +55,7 @@ class IncidentDetails(BaseModel):
     incident_id: str = Field(min_length=1)
     severity: str = Field(default="P1")
     service: str = Field(min_length=1)
+    department: str | None = None
     description: str = ""
     logs: str = ""
 
@@ -151,6 +154,16 @@ def handle_api_exception(exc: Exception):
             detail=str(exc),
         )
 
+    if isinstance(exc, EnterpriseAPIError):
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+    logger.exception(
+        "Unhandled incident API exception"
+    )
+    
     raise HTTPException(
         status_code=500,
         detail="Internal incident workflow error.",
@@ -200,7 +213,13 @@ def investigate_incident(
                     "A workflow already exists for this incident ID."
                 ),
             )
-
+        
+        # Register the incoming incident in the mock enterprise system.
+        # Existing seeded incidents are preserved.
+        enterprise_api.register_incident(
+            incident=incident,
+            requester=requester,
+        )
         initial_state = {
             "incident": incident,
             "requester": requester,

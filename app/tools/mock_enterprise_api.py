@@ -82,6 +82,87 @@ class MockEnterpriseAPI:
         # In-memory audit events.
         self._audit_events: list[dict[str, Any]] = []
 
+    def register_incident(
+        self,
+        incident: dict[str, Any],
+        requester: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Register an incident submitted through the demo API.
+
+        Existing seeded incidents are preserved and never overwritten.
+        New services receive UNKNOWN health until actual health data
+        is supplied.
+        """
+
+        incident_id = incident.get("incident_id")
+        service_name = incident.get("service")
+        department = (
+            incident.get("department")
+            or next(iter(requester.get("departments", [])), None)
+        )
+
+        if not incident_id:
+            raise EnterpriseAPIError("Incident ID is required.")
+
+        if not service_name:
+            raise EnterpriseAPIError("Service name is required.")
+
+        if not department:
+            raise EnterpriseAPIError(
+                "Incident department is required."
+            )
+
+        with self._lock:
+
+            # Preserve existing seeded incident records.
+            existing = self._incidents.get(incident_id)
+
+            if existing is not None:
+                self._check_incident_access(existing, requester)
+                return deepcopy(existing)
+
+            incident_record = {
+                "incident_id": incident_id,
+                "application": service_name,
+                "service": service_name,
+                "severity": incident.get("severity", "P1"),
+                "department": department,
+                "status": "OPEN",
+                "description": incident.get("description", ""),
+                "logs": incident.get("logs", ""),
+            }
+
+            self._check_incident_access(
+                incident_record,
+                requester,
+            )
+
+            self._incidents[incident_id] = incident_record
+
+            # Do not invent service-health measurements.
+            # Mark health as UNKNOWN until actual data is available.
+            if service_name not in self._service_health:
+                self._service_health[service_name] = {
+                    "service_name": service_name,
+                    "status": "UNKNOWN",
+                    "error_rate_percent": None,
+                    "database_connectivity": "UNKNOWN",
+                }
+
+            self._record_audit(
+                event_type="INCIDENT_REGISTERED",
+                incident_id=incident_id,
+                actor=requester["user_id"],
+                details={
+                    "service_name": service_name,
+                    "department": department,
+                    "status": "OPEN",
+                },
+            )
+
+            return deepcopy(incident_record)
+
     def _record_audit(
         self,
         event_type: str,
